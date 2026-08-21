@@ -468,7 +468,7 @@
                 formData.append('mine', '0');
                 formData.append('sortBy', 'newest');
                 
-                const response = await fetch('https://gloss.dliflc.edu/LessonJSON.aspx', {
+                const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://gloss.dliflc.edu/LessonJSON.aspx'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -573,7 +573,7 @@
             hideMessage();
             
             try {
-                const xmlUrl = `https://gloss.dliflc.edu/GlossHtml/templates/linksLO/glossLOs/${lessonName}.xml`;
+                const xmlUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://gloss.dliflc.edu/GlossHtml/templates/linksLO/glossLOs/${lessonName}.xml`);
                 const response = await fetch(xmlUrl);
                 
                 if (!response.ok) {
