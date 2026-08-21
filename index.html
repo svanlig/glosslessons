@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lesson Reader</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 70px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+        
+        .language-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .language-tab {
+            padding: 8px 14px;
+            background: #e9ecef;
+            color: #333;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .language-tab.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0052a3;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 0;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+        
+        button {
+            padding: 10px 18px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .lessons-list {
+            list-style: none;
+        }
+        
+        .lesson-item {
+            background: white;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        .lesson-item:active {
+            transform: scale(0.98);
+        }
+        
+        .lesson-item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+        
+        .lesson-item-meta {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .lesson-item.completed {
+            border-left: 4px solid #28a745;
+        }
+        
+        .lesson-item.completed .lesson-item-title::after {
+            content: " ✓";
+            color: #28a745;
+        }
+        
+        .lesson-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .lesson-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .lesson-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .lesson-meta {
+            display: flex;
+            gap: 12px;
+            color: #666;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+        
+        .article {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .article-text {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .article-translation {
+            color: #555;
+            font-style: italic;
+            margin: 10px 0;
+            padding: 12px 15px;
+            border-left: 3px solid #ddd;
+            background: white;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        audio {
+            width: 100%;
+            margin: 8px 0;
+        }
+        
+        .glossary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .glossary-table th {
+            background: #f0f0f0;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .glossary-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .audio-btn {
+            display: inline-block;
+            padding: 5px 14px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .complete-btn {
+            background: #28a745;
+            margin-top: 15px;
+            font-size: 16px;
+            padding: 14px 30px;
+            width: 100%;
+        }
+        
+        .back-btn {
+            background: #6c757d;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .history-section {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .history-toggle {
+            cursor: pointer;
+            color: #0066cc;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .language-group {
+            margin-bottom: 15px;
+        }
+        
+        .language-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .history-list {
+            list-style: none;
+        }
+        
+        .history-item {
+            padding: 8px 12px;
+            border-left: 3px solid #0066cc;
+            margin-bottom: 5px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .success {
+            color: #155724;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .load-more-btn {
+            width: 100%;
+            background: #6c757d;
+            margin-top: 10px;
+            padding: 14px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .bottom-nav button {
+            background: none;
+            color: #666;
+            padding: 5px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 11px;
+        }
+        
+        .bottom-nav button.active {
+            color: #0066cc;
+        }
+        
+        .bottom-nav .nav-icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Browse Section -->
+        <div id="browseSection">
+            <div class="header">
+                <h1>📚 Lesson Reader</h1>
+                <div class="language-tabs">
+                    <button class="language-tab active" onclick="switchLanguage(19, this)">🇹🇷 Turkish</button>
+                    <button class="language-tab" onclick="switchLanguage(2, this)">🇸🇦 Arabic</button>
+                    <button class="language-tab" onclick="switchLanguage(14, this)">🇮🇷 Farsi</button>
+                </div>
+                <div id="message"></div>
+            </div>
+            
+            <div id="loading" class="loading hidden">
+                <p>Loading lessons...</p>
+            </div>
+            
+            <ul class="lessons-list" id="lessonsList"></ul>
+            <button class="load-more-btn hidden" id="loadMoreBtn" onclick="loadMoreLessons()">Load More Lessons</button>
+        </div>
+        
+        <!-- Lesson Content Section -->
+        <div id="lessonContentSection" class="hidden">
+            <button class="back-btn" onclick="goBack()">← Back to Lessons</button>
+            <div class="lesson-content">
+                <div class="lesson-header">
+                    <div class="lesson-title" id="lessonTitle"></div>
+                    <div class="lesson-meta">
+                        <span id="lessonLanguage"></span>
+                        <span id="lessonLevel"></span>
+                        <span id="lessonTopic"></span>
+                    </div>
+                </div>
+                
+                <h2>📖 Reading</h2>
+                <div id="articlesContainer"></div>
+                
+                <h2>📝 Glossary</h2>
+                <table class="glossary-table">
+                    <thead>
+                        <tr>
+                            <th>Word</th>
+                            <th>Translation</th>
+                            <th>Audio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="glossaryBody"></tbody>
+                </table>
+                
+                <button class="complete-btn" onclick="completeLesson()">✓ Mark as Done</button>
+            </div>
+        </div>
+        
+        <!-- History Section -->
+        <div id="historySection" class="hidden">
+            <div class="history-section">
+                <h2>📖 Completed Lessons</h2>
+                <div id="historyContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-nav">
+        <button onclick="showBrowse()" id="browseBtn" class="active">
+            <span class="nav-icon">🏠</span>
+            Lessons
+        </button>
+        <button onclick="showHistory()" id="historyBtn">
+            <span class="nav-icon">📚</span>
+            History
+        </button>
+    </div>
+    
+    <script>
+        let currentLesson = null;
+        let currentAudio = null;
+        let currentLanguageId = 19;
+        let currentPage = 1;
+        let totalPages = 1;
+        let isLoadingMore = false;
+        
+        // Load initial data
+        loadLessons();
+        
+        function switchLanguage(languageId, btn) {
+            currentLanguageId = languageId;
+            currentPage = 1;
+            
+            document.querySelectorAll('.language-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            document.getElementById('lessonsList').innerHTML = '';
+            document.getElementById('loadMoreBtn').classList.add('hidden');
+            
+            loadLessons();
+        }
+        
+        async function loadLessons(append = false) {
+            showLoading(true);
+            hideMessage();
+            
+            try {
+                const formData = new URLSearchParams();
+                formData.append('action', 'search');
+                formData.append('gr', '0');
+                formData.append('page', currentPage);
+                formData.append('searchString', '');
+                formData.append('languageIds', currentLanguageId);
+                formData.append('levelIds', '');
+                formData.append('modalityIds', '');
+                formData.append('competenceIds', '');
+                formData.append('topicIds', '');
+                formData.append('subTopicIds', '');
+                formData.append('video', '0');
+                formData.append('statusIds', '');
+                formData.append('mine', '0');
+                formData.append('sortBy', 'newest');
+                
+                const response = await fetch('https://gloss.dliflc.edu/LessonJSON.aspx', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData.toString()
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayLessonsList(data, append);
+                
+            } catch (error) {
+                showMessage('Error loading lessons: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+                isLoadingMore = false;
+            }
+        }
+        
+        function displayLessonsList(data, append = false) {
+            const lessonsList = document.getElementById('lessonsList');
+            
+            if (!append) {
+                lessonsList.innerHTML = '';
+            }
+            
+            let lessons = [];
+            if (Array.isArray(data)) {
+                lessons = data;
+            } else if (data.lessons) {
+                lessons = data.lessons;
+            } else if (data.data) {
+                lessons = data.data;
+            }
+            
+            // Get total pages
+            if (data.totalPages) {
+                totalPages = data.totalPages;
+            } else if (data.pageCount) {
+                totalPages = data.pageCount;
+            } else {
+                totalPages = lessons.length > 0 ? currentPage + 1 : currentPage;
+            }
+            
+            // Get completed lessons from localStorage
+            const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            const completedNames = new Set(completedLessons.map(l => l.lesson_name));
+            
+            if (lessons.length === 0 && !append) {
+                lessonsList.innerHTML = '<li>No lessons found.</li>';
+                document.getElementById('loadMoreBtn').classList.add('hidden');
+                return;
+            }
+            
+            lessons.forEach(lesson => {
+                const li = document.createElement('li');
+                li.className = 'lesson-item';
+                
+                const title = lesson.title || 'Untitled';
+                const lessonName = lesson.name || '';
+                const level = lesson.level ? lesson.level.title : 'N/A';
+                const topic = lesson.topic ? lesson.topic.title : '';
+                const modality = lesson.modality ? lesson.modality.title : '';
+                
+                // Mark as completed if in history
+                if (completedNames.has(lessonName)) {
+                    li.classList.add('completed');
+                }
+                
+                li.innerHTML = `
+                    <div class="lesson-item-title">${title}</div>
+                    <div class="lesson-item-meta">
+                        Level: ${level} ${topic ? '| Topic: ' + topic : ''} ${modality ? '| ' + modality : ''}
+                    </div>
+                `;
+                
+                li.onclick = () => loadLessonByName(lessonName);
+                lessonsList.appendChild(li);
+            });
+            
+            // Show/hide load more button
+            if (currentPage < totalPages) {
+                document.getElementById('loadMoreBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('loadMoreBtn').classList.add('hidden');
+            }
+        }
+        
+        function loadMoreLessons() {
+            if (isLoadingMore) return;
+            isLoadingMore = true;
+            currentPage++;
+            loadLessons(true);
+        }
+        
+        async function loadLessonByName(lessonName) {
+            showLoading(true);
+            hideMessage();
+            
+            try {
+                const xmlUrl = `https://gloss.dliflc.edu/GlossHtml/templates/linksLO/glossLOs/${lessonName}.xml`;
+                const response = await fetch(xmlUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch XML (${response.status})`);
+                }
+                
+                const xmlText = await response.text();
+                const lessonData = parseXML(xmlText, lessonName);
+                
+                if (lessonData) {
+                    displayLesson(lessonData);
+                    currentLesson = lessonData;
+                    showLessonContent();
+                } else {
+                    showMessage('Failed to parse XML', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function parseXML(xmlText, lessonName) {
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                
+                const lessonData = {
+                    lesson_name: lessonName,
+                    title: '',
+                    language: '',
+                    level: '',
+                    topic: '',
+                    articles: [],
+                    glossary: []
+                };
+                
+                const qrecs = xmlDoc.querySelectorAll('QREC');
+                
+                qrecs.forEach(qrec => {
+                    const aType = qrec.querySelector('A_Type');
+                    if (!aType) return;
+                    
+                    const typeText = aType.textContent.trim();
+                    
+                    if (typeText === 'GW') {
+                        const title = qrec.querySelector('OL_Title');
+                        const language = qrec.querySelector('LANGUAGE');
+                        const level = qrec.querySelector('LEVEL');
+                        const topic = qrec.querySelector('TOPIC');
+                        
+                        if (title) lessonData.title = title.textContent.trim();
+                        if (language) lessonData.language = language.textContent.trim();
+                        if (level) lessonData.level = level.textContent.trim();
+                        if (topic) lessonData.topic = topic.textContent.trim();
+                    }
+                    
+                    if (typeText === 'GG') {
+                        const glosLeft = qrec.querySelectorAll('GlosLeft');
+                        const glosRight = qrec.querySelectorAll('GlosRight');
+                        const audioStimuli = qrec.querySelectorAll('AUD_STIMULUS');
+                        
+                        let audioIndex = 0;
+                        if (audioStimuli.length > 0 && audioStimuli[0].textContent.trim() === 'SELECT') {
+                            audioIndex = 1;
+                        }
+                        
+                        for (let i = 0; i < Math.min(glosLeft.length, glosRight.length); i++) {
+                            let audioUrl = '';
+                            if (audioIndex < audioStimuli.length) {
+                                const audioFile = audioStimuli[audioIndex].textContent.trim();
+                                if (audioFile && audioFile !== 'SELECT') {
+                                    audioUrl = `https://gloss.dliflc.edu/products/gloss/${lessonName}/media/${audioFile}`;
+                                }
+                                audioIndex++;
+                            }
+                            
+                            lessonData.glossary.push({
+                                word: glosLeft[i].textContent.trim(),
+                                translation: glosRight[i].textContent.trim(),
+                                audio: audioUrl
+                            });
+                        }
+                    }
+                    
+                    if (typeText === 'CO') {
+                        const articlesFL = qrec.querySelectorAll('CO_ParaFL');
+                        const articlesXL = qrec.querySelectorAll('CO_ParaXL');
+                        const audioStimuli = qrec.querySelectorAll('AUD_STIMULUS');
+                        
+                        for (let i = 0; i < Math.min(articlesFL.length, articlesXL.length); i++) {
+                            let audioUrl = '';
+                            if (i < audioStimuli.length) {
+                                const audioFile = audioStimuli[i].textContent.trim();
+                                if (audioFile && audioFile !== 'SELECT' && audioFile !== 'No Video File') {
+                                    audioUrl = `https://gloss.dliflc.edu/products/gloss/${lessonName}/media/${audioFile}`;
+                                }
+                            }
+                            
+                            lessonData.articles.push({
+                                fl: articlesFL[i].textContent.trim(),
+                                xl: articlesXL[i].textContent.trim(),
+                                audio: audioUrl
+                            });
+                        }
+                    }
+                });
+                
+                return lessonData;
+            } catch (error) {
+                console.error('Parse error:', error);
+                return null;
+            }
+        }
+        
+        function displayLesson(lesson) {
+            document.getElementById('lessonTitle').textContent = lesson.title || 'Untitled Lesson';
+            document.getElementById('lessonLanguage').textContent = '🌐 ' + (lesson.language || 'Unknown');
+            document.getElementById('lessonLevel').textContent = '📊 Level: ' + (lesson.level || 'N/A');
+            document.getElementById('lessonTopic').textContent = '📌 ' + (lesson.topic || 'N/A');
+            
+            const articlesContainer = document.getElementById('articlesContainer');
+            articlesContainer.innerHTML = '';
+            
+            if (lesson.articles && lesson.articles.length > 0) {
+                lesson.articles.forEach((article) => {
+                    const articleDiv = document.createElement('div');
+                    articleDiv.className = 'article';
+                    
+                    let articleHTML = `<div class="article-text">${article.fl}</div>`;
+                    
+                    if (article.audio) {
+                        articleHTML += `<audio controls><source src="${article.audio}" type="audio/mpeg"></audio>`;
+                    }
+                    
+                    articleHTML += `<div class="article-translation">${article.xl}</div>`;
+                    
+                    articleDiv.innerHTML = articleHTML;
+                    articlesContainer.appendChild(articleDiv);
+                });
+            } else {
+                articlesContainer.innerHTML = '<p>No articles found.</p>';
+            }
+            
+            const glossaryBody = document.getElementById('glossaryBody');
+            glossaryBody.innerHTML = '';
+            
+            if (lesson.glossary && lesson.glossary.length > 0) {
+                lesson.glossary.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    let audioHTML = '-';
+                    if (item.audio) {
+                        audioHTML = `<button class="audio-btn" onclick="playAudio('${item.audio}', this)">▶</button>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td><strong>${item.word}</strong></td>
+                        <td>${item.translation}</td>
+                        <td>${audioHTML}</td>
+                    `;
+                    
+                    glossaryBody.appendChild(row);
+                });
+            } else {
+                glossaryBody.innerHTML = '<tr><td colspan="3">No glossary found.</td></tr>';
+            }
+        }
+        
+        function playAudio(url, btn) {
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+            
+            currentAudio = new Audio(url);
+            currentAudio.play();
+            
+            if (btn) {
+                const originalText = btn.textContent;
+                btn.textContent = '⏸';
+                btn.style.background = '#dc3545';
+                
+                currentAudio.onended = () => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#28a745';
+                };
+                
+                currentAudio.onpause = () => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#28a745';
+                };
+            }
+        }
+        
+        function completeLesson() {
+            if (!currentLesson) return;
+            
+            let completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            
+            const exists = completedLessons.some(l => l.lesson_name === currentLesson.lesson_name);
+            if (exists) {
+                showMessage('Lesson already marked as done!', 'success');
+                return;
+            }
+            
+            completedLessons.push({
+                lesson_name: currentLesson.lesson_name,
+                title: currentLesson.title,
+                language: currentLesson.language,
+                level: currentLesson.level,
+                topic: currentLesson.topic,
+                date: new Date().toLocaleDateString()
+            });
+            
+            localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+            showMessage('Lesson marked as done! ✓', 'success');
+            
+            // Update the lesson list to show completion
+            setTimeout(() => {
+                goBack();
+            }, 1000);
+        }
+        
+        function loadHistory() {
+            const completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            displayHistory(completedLessons);
+        }
+        
+        function displayHistory(lessons) {
+            const historyContent = document.getElementById('historyContent');
+            historyContent.innerHTML = '';
+            
+            if (lessons.length === 0) {
+                historyContent.innerHTML = '<p>No completed lessons yet.</p>';
+                return;
+            }
+            
+            const grouped = {};
+            lessons.forEach(lesson => {
+                const lang = lesson.language || 'Unknown';
+                if (!grouped[lang]) {
+                    grouped[lang] = [];
+                }
+                grouped[lang].push(lesson);
+            });
+            
+            Object.keys(grouped).sort().forEach(lang => {
+                const langDiv = document.createElement('div');
+                langDiv.className = 'language-group';
+                
+                let langHTML = `<div class="language-title">${lang}</div>`;
+                langHTML += '<ul class="history-list">';
+                
+                grouped[lang].forEach(lesson => {
+                    langHTML += `
+                        <li class="history-item">
+                            <span>${lesson.title || lesson.lesson_name}</span>
+                            <span>${lesson.date}</span>
+                        </li>
+                    `;
+                });
+                
+                langHTML += '</ul>';
+                langDiv.innerHTML = langHTML;
+                historyContent.appendChild(langDiv);
+            });
+        }
+        
+        function showBrowse() {
+            document.getElementById('browseSection').classList.remove('hidden');
+            document.getElementById('lessonContentSection').classList.add('hidden');
+            document.getElementById('historySection').classList.add('hidden');
+            document.getElementById('browseBtn').classList.add('active');
+            document.getElementById('historyBtn').classList.remove('active');
+            window.scrollTo(0, 0);
+        }
+        
+        function showLessonContent() {
+            document.getElementById('browseSection').classList.add('hidden');
+            document.getElementById('lessonContentSection').classList.remove('hidden');
+            document.getElementById('historySection').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        function showHistory() {
+            document.getElementById('browseSection').classList.add('hidden');
+            document.getElementById('lessonContentSection').classList.add('hidden');
+            document.getElementById('historySection').classList.remove('hidden');
+            document.getElementById('historyBtn').classList.add('active');
+            document.getElementById('browseBtn').classList.remove('active');
+            loadHistory();
+            window.scrollTo(0, 0);
+        }
+        
+        function goBack() {
+            showBrowse();
+            // Reload lessons to update completed marks
+            currentPage = 1;
+            loadLessons();
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+        
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${msg}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+        
+        function hideMessage() {
+            document.getElementById('message').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
