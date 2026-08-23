@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Reader</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { margin-bottom: 15px; font-size: 24px; }
+        .language-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .language-tab {
+            padding: 10px 20px;
+            background: #e9ecef;
+            color: #333;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .language-tab.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0052a3;
+        }
+        button {
+            padding: 12px 24px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .lessons-list { list-style: none; margin-bottom: 20px; }
+        .lesson-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .lesson-item:hover { background: #f8f9fa; }
+        .lesson-item-title { font-weight: 600; margin-bottom: 5px; }
+        .lesson-item-meta { font-size: 12px; color: #666; }
+        .lesson-item.completed { border-left: 4px solid #28a745; }
+        .lesson-item.completed .lesson-item-title::after { content: " ✓"; color: #28a745; }
+        .lesson-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .lesson-title { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
+        .lesson-meta { display: flex; gap: 20px; color: #666; font-size: 14px; }
+        .article {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+        .article-text { margin-bottom: 15px; font-size: 16px; }
+        .article-translation {
+            color: #555;
+            font-style: italic;
+            margin: 15px 0;
+            padding: 15px 20px;
+            border-left: 3px solid #ddd;
+            background: white;
+        }
+        audio { width: 100%; margin: 10px 0; }
+        .glossary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .glossary-table th { background: #f0f0f0; padding: 12px; text-align: left; }
+        .glossary-table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+        .complete-btn {
+            background: #28a745;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 16px;
+        }
+        .back-btn { background: #6c757d; margin-bottom: 20px; width: 100%; }
+        .history-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .history-toggle { cursor: pointer; color: #0066cc; font-weight: 500; margin-bottom: 15px; }
+        .language-group { margin-bottom: 20px; }
+        .language-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+        .history-list { list-style: none; }
+        .history-item {
+            padding: 8px 12px;
+            border-left: 3px solid #0066cc;
+            margin-bottom: 5px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+        }
+        .error { color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px; margin-top: 10px; }
+        .success { color: #155724; padding: 10px; background: #d4edda; border-radius: 4px; margin-top: 10px; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .hidden { display: none; }
+        .load-more-btn { width: 100%; background: #6c757d; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="browseSection">
+            <div class="header">
+                <h1>📚 Lesson Reader</h1>
+                <div class="language-tabs">
+                    <button class="language-tab active" onclick="switchLanguage(19, this)">🇹🇷 Turkish</button>
+                    <button class="language-tab" onclick="switchLanguage(2, this)">🇸🇦 Arabic</button>
+                    <button class="language-tab" onclick="switchLanguage(14, this)">🇮🇷 Farsi</button>
+                </div>
+                <div id="message"></div>
+            </div>
+            
+            <div id="loading" class="loading hidden">
+                <p>Loading lessons...</p>
+            </div>
+            
+            <ul class="lessons-list" id="lessonsList"></ul>
+            <button class="load-more-btn hidden" id="loadMoreBtn" onclick="loadMoreLessons()">Load More Lessons</button>
+        </div>
+        
+        <div id="lessonContentSection" class="hidden">
+            <button class="back-btn" onclick="goBack()">← Back to Lessons</button>
+            <div class="lesson-content">
+                <div class="lesson-header">
+                    <div class="lesson-title" id="lessonTitle"></div>
+                    <div class="lesson-meta">
+                        <span id="lessonLanguage"></span>
+                        <span id="lessonLevel"></span>
+                        <span id="lessonTopic"></span>
+                    </div>
+                </div>
+                
+                <h2>📖 Reading</h2>
+                <div id="articlesContainer"></div>
+                
+                <h2>📝 Glossary</h2>
+                <table class="glossary-table">
+                    <thead>
+                        <tr>
+                            <th>Word</th>
+                            <th>Translation</th>
+                            <th>Audio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="glossaryBody"></tbody>
+                </table>
+                
+                <button class="complete-btn" onclick="completeLesson()">✓ Mark as Done</button>
+            </div>
+        </div>
+        
+        <div class="history-section">
+            <div class="history-toggle" onclick="toggleHistory()">📖 Show Completed Lessons</div>
+            <div id="historyContent" class="hidden"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentLesson = null;
+        let currentLanguageId = 19;
+        let currentPage = 1;
+        let totalPages = 1;
+        let isLoadingMore = false;
+        
+        loadLessons();
+        loadHistory();
+        
+        function switchLanguage(languageId, btn) {
+            currentLanguageId = languageId;
+            currentPage = 1;
+            
+            document.querySelectorAll('.language-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            document.getElementById('lessonsList').innerHTML = '';
+            document.getElementById('loadMoreBtn').classList.add('hidden');
+            
+            loadLessons();
+        }
+        
+        async function loadLessons(append = false) {
+            showLoading(true);
+            hideMessage();
+            
+            try {
+                const response = await fetch('/search_lessons', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ languageId: currentLanguageId, page: currentPage })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayLessonsList(data, append);
+                } else {
+                    showMessage(data.error || 'Failed to load lessons', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+                isLoadingMore = false;
+            }
+        }
+        
+        function displayLessonsList(data, append = false) {
+            const lessonsList = document.getElementById('lessonsList');
+            
+            if (!append) {
+                lessonsList.innerHTML = '';
+            }
+            
+            let lessons = [];
+            if (Array.isArray(data)) {
+                lessons = data;
+            } else if (data.lessons) {
+                lessons = data.lessons;
+            } else if (data.data) {
+                lessons = data.data;
+            }
+            
+            if (data.totalPages) {
+                totalPages = data.totalPages;
+            } else if (data.pageCount) {
+                totalPages = data.pageCount;
+            } else {
+                totalPages = lessons.length > 0 ? currentPage + 1 : currentPage;
+            }
+            
+            // Get completed lessons
+            fetch('/get_completed_lessons')
+                .then(response => response.json())
+                .then(grouped => {
+                    const completedNames = new Set();
+                    Object.values(grouped).forEach(lessons => {
+                        lessons.forEach(l => completedNames.add(l.lesson_name));
+                    });
+                    
+                    if (lessons.length === 0 && !append) {
+                        lessonsList.innerHTML = '<li>No lessons found.</li>';
+                        document.getElementById('loadMoreBtn').classList.add('hidden');
+                        return;
+                    }
+                    
+                    lessons.forEach(lesson => {
+                        const li = document.createElement('li');
+                        li.className = 'lesson-item';
+                        
+                        const title = lesson.title || 'Untitled';
+                        const lessonName = lesson.name || '';
+                        const level = lesson.level ? lesson.level.title : 'N/A';
+                        const topic = lesson.topic ? lesson.topic.title : '';
+                        const modality = lesson.modality ? lesson.modality.title : '';
+                        
+                        if (completedNames.has(lessonName)) {
+                            li.classList.add('completed');
+                        }
+                        
+                        li.innerHTML = `
+                            <div class="lesson-item-title">${title}</div>
+                            <div class="lesson-item-meta">
+                                Level: ${level} ${topic ? '| Topic: ' + topic : ''} ${modality ? '| ' + modality : ''}
+                            </div>
+                        `;
+                        
+                        li.onclick = () => loadLessonByName(lessonName);
+                        lessonsList.appendChild(li);
+                    });
+                    
+                    if (currentPage < totalPages) {
+                        document.getElementById('loadMoreBtn').classList.remove('hidden');
+                    } else {
+                        document.getElementById('loadMoreBtn').classList.add('hidden');
+                    }
+                });
+        }
+        
+        function loadMoreLessons() {
+            if (isLoadingMore) return;
+            isLoadingMore = true;
+            currentPage++;
+            loadLessons(true);
+        }
+        
+        async function loadLessonByName(lessonName) {
+            showLoading(true);
+            hideMessage();
+            
+            try {
+                const response = await fetch('/load_lesson', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        url: `https://gloss.dliflc.edu/LessonViewer.aspx?lessonName=${lessonName}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayLesson(data);
+                    currentLesson = data;
+                    document.getElementById('browseSection').classList.add('hidden');
+                    document.getElementById('lessonContentSection').classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                } else {
+                    showMessage(data.error || 'Failed to load lesson', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function displayLesson(lesson) {
+            document.getElementById('lessonTitle').textContent = lesson.title || 'Untitled Lesson';
+            document.getElementById('lessonLanguage').textContent = '🌐 ' + (lesson.language || 'Unknown');
+            document.getElementById('lessonLevel').textContent = '📊 Level: ' + (lesson.level || 'N/A');
+            document.getElementById('lessonTopic').textContent = '📌 ' + (lesson.topic || 'N/A');
+            
+            const articlesContainer = document.getElementById('articlesContainer');
+            articlesContainer.innerHTML = '';
+            
+            if (lesson.articles && lesson.articles.length > 0) {
+                lesson.articles.forEach((article) => {
+                    const articleDiv = document.createElement('div');
+                    articleDiv.className = 'article';
+                    
+                    let articleHTML = `<div class="article-text">${article.fl}</div>`;
+                    
+                    if (article.audio) {
+                        articleHTML += `<audio controls><source src="${article.audio}" type="audio/mpeg"></audio>`;
+                    }
+                    
+                    articleHTML += `<div class="article-translation">${article.xl}</div>`;
+                    
+                    articleDiv.innerHTML = articleHTML;
+                    articlesContainer.appendChild(articleDiv);
+                });
+            } else {
+                articlesContainer.innerHTML = '<p>No articles found.</p>';
+            }
+            
+            const glossaryBody = document.getElementById('glossaryBody');
+            glossaryBody.innerHTML = '';
+            
+            if (lesson.glossary && lesson.glossary.length > 0) {
+                lesson.glossary.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    let audioHTML = '-';
+                    if (item.audio) {
+                        audioHTML = `<button onclick="playAudio('${item.audio}')">▶ Play</button>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td><strong>${item.word}</strong></td>
+                        <td>${item.translation}</td>
+                        <td>${audioHTML}</td>
+                    `;
+                    
+                    glossaryBody.appendChild(row);
+                });
+            } else {
+                glossaryBody.innerHTML = '<tr><td colspan="3">No glossary found.</td></tr>';
+            }
+        }
+        
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.play();
+        }
+        
+        function completeLesson() {
+            if (!currentLesson) return;
+            
+            fetch('/complete_lesson', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(currentLesson)
+            })
+            .then(response => response.json())
+            .then(() => {
+                showMessage('Lesson marked as done! ✓', 'success');
+                loadHistory();
+            })
+            .catch(error => {
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function loadHistory() {
+            fetch('/get_completed_lessons')
+                .then(response => response.json())
+                .then(grouped => displayHistory(grouped))
+                .catch(error => console.error('Error:', error));
+        }
+        
+        function displayHistory(grouped) {
+            const historyContent = document.getElementById('historyContent');
+            historyContent.innerHTML = '';
+            
+            const languages = Object.keys(grouped);
+            
+            if (languages.length === 0) {
+                historyContent.innerHTML = '<p>No completed lessons yet.</p>';
+                return;
+            }
+            
+            languages.sort().forEach(lang => {
+                const langDiv = document.createElement('div');
+                langDiv.className = 'language-group';
+                
+                let langHTML = `<div class="language-title">${lang}</div>`;
+                langHTML += '<ul class="history-list">';
+                
+                grouped[lang].forEach(lesson => {
+                    langHTML += `
+                        <li class="history-item">
+                            <span>${lesson.title || lesson.lesson_name}</span>
+                            <span>${lesson.date}</span>
+                        </li>
+                    `;
+                });
+                
+                langHTML += '</ul>';
+                langDiv.innerHTML = langHTML;
+                historyContent.appendChild(langDiv);
+            });
+        }
+        
+        function toggleHistory() {
+            const historyContent = document.getElementById('historyContent');
+            historyContent.classList.toggle('hidden');
+            if (!historyContent.classList.contains('hidden')) {
+                loadHistory();
+            }
+        }
+        
+        function goBack() {
+            document.getElementById('browseSection').classList.remove('hidden');
+            document.getElementById('lessonContentSection').classList.add('hidden');
+            window.scrollTo(0, 0);
+            loadLessons();
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+        
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${msg}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+        
+        function hideMessage() {
+            document.getElementById('message').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
